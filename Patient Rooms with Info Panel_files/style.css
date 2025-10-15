@@ -1,0 +1,527 @@
+ :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      background: #111;
+      font-family: Arial, sans-serif;
+      color: #fff;
+      overflow: hidden;
+    }
+    canvas {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      display: block;
+      background: #222;
+      z-index: 0;
+    }
+    .menu {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-top: 120px;
+    }
+    h1 { margin: 0 0 16px; font-weight: 700; }
+    .hint { opacity: 0.8; font-size: 14px; margin: 8px 0 16px; }
+    .controls { display: inline-flex; gap: 12px; align-items: center; }
+    input[type="file"] {
+      background: #333; border: 1px solid #444; border-radius: 8px; padding: 8px;
+    }
+    button {
+      padding: 10px 18px; font-size: 16px; border: none; border-radius: 8px;
+      cursor: pointer; background: #444; color: #fff; transition: background .2s;
+    }
+    button:hover { background: #666; }
+    .badge {
+      display: inline-block; background: #333; border: 1px solid #555; border-radius: 999px;
+      padding: 4px 10px; font-size: 12px; margin-top: 8px;
+    }
+
+    /* Patient info panel */
+    #infoPanel {
+      position: fixed;
+      top: 0; right: -300px; height: 100%; width: 300px;
+      background: #1e1e1e; border-left: 2px solid #333;
+      padding: 20px;
+      box-sizing: border-box;
+      transition: right 0.3s ease;
+      z-index: 2;
+      overflow-y: auto;
+    }
+    #infoPanel.open { right: 0; }
+    #infoPanel h2 { margin-top: 0; }
+    #closeInfo {
+      background: #444; color: #fff; border: none; border-radius: 6px;
+      padding: 6px 12px; cursor: pointer; margin-top: 10px;
+    }
+        /* Patient info sidebar */
+    #patientInfo {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 220px;
+    height: 100%;
+    background: #222;
+    color: white;
+    padding: 15px;
+    display: none; /* hidden until patient is clicked */
+    z-index: 2;
+    }
+    #patientInfo h2 {
+    margin-top: 0;
+    }
+
+    /* Room action sidebar */
+    #roomMenu {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 220px;
+    height: 100%;
+    background: #333;
+    color: white;
+    padding: 15px;
+    display: none; /* hidden until zoom in */
+    z-index: 2;
+    }
+    #roomMenu h2 {
+    margin-top: 0;
+    }
+    #roomMenu button {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 10px;
+    font-size: 16px;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    }
+    #roomMenu button:hover {
+    background: #666;
+    }
+    /* In index.html, inside the <style> tag */
+
+.room {
+  /* ... your existing styles for .room ... */
+  border: 1px solid #444;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 8px;
+  background-color: #2a2a2a;
+  
+  /* --- Add these lines --- */
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: contain; /* This makes the image fit inside the div */
+}
+
+    /* Style for the waiting room */
+    #waiting-room {
+      /* Change the url path here */
+      background-image: url('/images/waiting_chair.png');
+      background-size: 40%;
+      background-position: center 60%;
+    }
+
+    /* Style for all patient rooms */
+    .patient-room {
+      /* And change the url path here */
+      background-image: url('/images/patient_bed.png');
+      background-size: 70%;
+    }
+
+    .game-ui {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 2; /* Ensures it's above the canvas */
+    }
+    /* Vitals Pop-up Menu */
+#vitalsPopup {
+  display: none; /* This makes it hidden by default */
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  width: 220px;
+  background: #2a2a2e;
+  border: 1px solid #555;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  z-index: 10;
+  font-size: 14px;
+  
+  /* Layout properties */
+  max-height: 90vh;
+  flex-direction: column;
+  padding: 0;
+}
+
+#vitalsHeader {
+  padding: 12px 12px 0 12px;
+  flex-shrink: 0;
+}
+
+#vitalsBody {
+  padding: 12px;
+  overflow-y: auto; /* This will stop the "popping out" */
+}
+#vitalsTitle {
+  margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #555;
+  text-align: center;
+  font-size: 16px;
+  color: #fff;
+}
+#vitalsContent div {
+  padding: 4px 0;
+  border-bottom: 1px solid #333;
+}
+#vitalsContent div:last-child {
+  border-bottom: none;
+}
+
+/* Generic Submenu Styling */
+.submenu {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 0;
+  width: 200px; /* A bit narrower than the main menu */
+  height: 100%;
+  background: #2a2a2e; /* A slightly different shade */
+  color: white;
+  padding: 15px;
+  z-index: 2;
+  border-left: 2px solid #444;
+}
+
+.submenu h4 {
+  margin-top: 0;
+  text-align: center;
+  border-bottom: 1px solid #555;
+  padding-bottom: 10px;
+}
+
+.submenu button {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  font-size: 16px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.submenu button:hover {
+  background: #555;
+}
+
+/* Accordion Styling */
+.accordion {
+  margin-top: 15px;
+}
+.accordion-header {
+  background: #3c3c42;
+  color: #fff;
+  cursor: pointer;
+  padding: 10px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+  transition: 0.4s;
+  border-radius: 6px;
+}
+.accordion-header:hover, .accordion-header.active {
+  background-color: #4a4a52;
+}
+.accordion-header::after {
+  content: ''; /* We're creating a shape, not using text */
+  float: right;
+  margin-left: 5px;
+  margin-top: 5px; /* Adjust vertical alignment */
+  
+  /* This creates the arrow shape using borders */
+  border: solid #ccc;
+  border-width: 0 2px 2px 0;
+  display: inline-block;
+  padding: 3px;
+  
+  /* Point the arrow down by default (closed state) */
+  transform: rotate(45deg);
+  
+  /* Add a smooth animation to the rotation */
+  transition: transform 0.2s ease-out;
+}
+
+.accordion-header.active::after {
+  /* Point the arrow up when the accordion is active (open state) */
+  transform: rotate(-135deg);
+}
+.accordion-content {
+  padding: 0 12px;
+  background-color: #2a2a2e;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+  font-size: 14px;
+}
+.accordion-content div {
+  padding: 6px 0;
+  border-bottom: 1px solid #3f3f44;
+}
+.accordion-content div:last-child {
+  border-bottom: none;
+}
+
+
+/* Styling for all search inputs inside submenus */
+.submenu-search-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  border: 1px solid #555; /* or var(--border-color) if you set that up */
+  background: #1e1e1e;
+  color: #fff;
+  box-sizing: border-box;
+}
+
+/* Styling for the container that will hold the test buttons */
+#labTestList {
+  overflow-y: auto; /* Adds a scrollbar if the list is long */
+  height: calc(100% - 80px); /* Fill remaining space */
+}
+.chief-complaint {
+  font-style: italic;
+  color: #ccc;
+  margin: 5px 0 10px 0;
+  text-align: center;
+  font-size: 14px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+}
+
+/* --- CHAT WINDOW STYLING --- */
+
+/* Position the chat window in the shared submenu space */
+#chatWindow {
+  right: 220px;
+  flex-direction: column; /* Stack items vertically */
+}
+
+/* The area where messages appear */
+#chatMessages {
+  flex-grow: 1; /* This is the key: it makes the message area expand to fill all available vertical space */
+  background: #1e1e1e;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  padding: 8px;
+  overflow-y: auto; /* Adds a scrollbar if messages get long */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Container for the input and send button at the bottom */
+.chat-input-area {
+  display: flex;
+  gap: 5px;
+}
+
+#chatInput {
+  flex-grow: 1; /* Makes the input field take up most of the width */
+  border: 1px solid #555;
+  background: #1e1e1e;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+#sendBtn {
+  padding: 8px 12px;
+}
+
+/* --- CHAT BUBBLE STYLING (You should already have this) --- */
+.chat-bubble {
+  padding: 10px 15px;
+  border-radius: 18px;
+  max-width: 80%;
+  word-wrap: break-word;
+}
+.user-bubble {
+  background-color: #555;
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.patient-bubble {
+  background-color: #555;
+  color: #fff;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.btn-action-final {
+  margin-top: 20px !important;
+  background-color: #2c6e3b !important; /* A calm green */
+}
+.btn-action-final:hover {
+  background-color: #3f8c53 !important;
+}
+/* --- Reusable Modal/Pop-up System --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 20;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  
+  /* Hide by default using visibility and opacity */
+  visibility: hidden;
+  opacity: 0;
+  
+  /* Add a smooth fade transition */
+  transition: opacity 0.2s ease-in-out;
+}
+
+/* This new rule tells the browser what to do when the .visible class is added */
+.modal-backdrop.visible {
+  visibility: visible;
+  opacity: 1;
+}
+
+.modal-content {
+  position: relative;
+  background: #2a2a2e; /* ✅ Using a solid, hard-coded color */
+  padding: 25px;
+  border-radius: 12px;
+  border: 1px solid #555;   /* ✅ Using a solid, hard-coded color */
+  width: 90%;
+  max-width: 450px;
+  text-align: center;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+}
+
+.modal-content.large-modal {
+  max-width: 600px;
+}
+
+/* --- Styles for specific modals and their content --- */
+.disposition-choices {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin: 20px 0;
+}
+
+#closeFeedback {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  color: var(--text-color-muted);
+  padding: 5px 10px;
+  line-height: 1;
+  box-shadow: none;
+}
+
+#closeFeedback:hover {
+  color: #fff;
+  background: var(--panel-background-alt);
+}
+
+/* --- Final Feedback Report Styling --- */
+.feedback-section h4, #feedbackContent h4 {
+  margin-top: 15px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 5px;
+  color: var(--text-color);
+}
+.feedback-section p, #feedbackContent p {
+  margin: 5px 0;
+}
+.feedback-task {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  background-color: var(--panel-background-alt);
+  border: 1px solid transparent;
+}
+.task-icon {
+  font-weight: bold;
+  font-size: 16px;
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+}
+.task-name {
+  flex-grow: 1;
+}
+.feedback-task.correct {
+  background-color: #28362b;
+  border-color: #34c759;
+}
+.feedback-task.correct .task-icon {
+  color: #34c759;
+}
+.feedback-task.missed {
+  background-color: #422727;
+  border-color: #ff3b30;
+}
+.feedback-task.missed .task-icon {
+  color: #ff3b30;
+}
+.feedback-task.neutral {
+  background-color: #333;
+  border-color: #888;
+}
+.feedback-task.neutral .task-icon {
+  color: #888;
+}
+.feedback-unnecessary {
+  color: #ff9500;
+  list-style: none;
+}
+/* Position all submenus in the same shared space */
+#physicalExamMenu,
+#labMenu,
+#chatWindow,
+#medsMenu,
+#bedsideMenu {
+  right: 220px;
+}
+/* In index.html, in the <style> tag */
+#ekgImageContainer {
+  width: 100%;
+  margin: 15px 0;
+  background: #111;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 6px;
+}
+#ekgImage {
+  width: 100%;
+  display: block;
+}
+#closeEkgModal {
+  position: absolute; top: 5px; right: 5px; background: transparent;
+  border: none; font-size: 24px; color: #888; cursor: pointer;
+}
