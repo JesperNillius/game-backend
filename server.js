@@ -73,7 +73,6 @@ app.use(cors({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(express.static(path.join(__dirname, '..', 'game-frontend')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- 5. PASSPORT STRATEGY CONFIGURATION ---
@@ -270,12 +269,6 @@ const gameHelpers = {
 app.use('/api/auth', createAuthRouter(gameData));
 app.use('/api', createGameRouter(gameData, gameHelpers));
 app.use('/api/patient', createPatientRouter(gameData, gameHelpers));
-
-// --- 8a. CATCH-ALL FOR FRONTEND ROUTING ---
-// This must come AFTER your API routes.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'game-frontend', 'index.html'));
-});
 
 // --- 9. ERROR HANDLING MIDDLEWARE (Add this after routers) ---
 app.use((err, req, res, next) => {
