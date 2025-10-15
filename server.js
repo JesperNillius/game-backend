@@ -30,7 +30,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 
 // --- 3. DATABASE CONNECTION ---
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://JesperNillius:dBCI7Pqn0di2DbVQ@cluster0.3wbdx0q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Successfully connected to MongoDB Atlas!'))
   .catch(error => console.error('Error connecting to MongoDB Atlas:', error));
@@ -48,8 +48,8 @@ app.use(session({
     sameSite: 'lax' // This is the key fix for local development
   }
 }));
-app.use(cors({ origin: 'http://127.0.0.1:5500', credentials: true }));
-app.use(express.json());
+const allowedOrigin = process.env.FRONTEND_URL;
+app.use(cors({ origin: allowedOrigin, credentials: true }));app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
 
