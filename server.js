@@ -50,6 +50,7 @@ app.use(session({
 }));
 
 
+// --- CORS Configuration for Live and Local ---
 const allowedOrigins = [
   'http://127.0.0.1:5500', // Your local frontend
   process.env.FRONTEND_URL   // Your live Render frontend URL
