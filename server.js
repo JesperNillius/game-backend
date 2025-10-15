@@ -69,6 +69,9 @@ app.use(cors({
   credentials: true
 }));
 
+// ✅ Add the express.json() middleware to parse JSON request bodies
+app.use(express.json());
+
 
 app.use(passport.initialize());
 app.use(passport.session());
