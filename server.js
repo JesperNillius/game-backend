@@ -37,15 +37,21 @@ mongoose.connect(MONGO_URI)
 
 
 // --- 4. MIDDLEWARE SETUP (Order is Critical) ---
+// ✅ Add the express.json() middleware to parse JSON request bodies
+app.use(express.json());
+
+// Tell Express it's behind a proxy like Render
+app.set('trust proxy', 1);
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: MONGO_URI }),
   cookie: { 
-    secure: false, // Use 'true' in production with HTTPS
+    secure: true, // Requires HTTPS, which Render provides
     httpOnly: true,
-    sameSite: 'lax' // This is the key fix for local development
+    sameSite: 'none' // Allows the cookie to be sent from a different domain
   }
 }));
 
@@ -69,8 +75,7 @@ app.use(cors({
   credentials: true
 }));
 
-// ✅ Add the express.json() middleware to parse JSON request bodies
-app.use(express.json());
+
 
 
 app.use(passport.initialize());
