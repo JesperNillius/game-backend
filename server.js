@@ -43,7 +43,8 @@ app.use(express.json());
 const allowedOrigins = [
   'http://127.0.0.1:5500', // Local frontend (using IP)
   'http://localhost:5500',   // Local frontend (using localhost)
-  process.env.FRONTEND_URL   // Your live Render frontend URL
+  'https://aqten-game-frontend.onrender.com', // Live frontend URL
+  process.env.FRONTEND_URL   // Your live Render frontend URL from environment variables
 ];
 
 app.use(cors({
