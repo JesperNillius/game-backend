@@ -37,51 +37,55 @@ mongoose.connect(MONGO_URI)
 
 
 // --- 4. MIDDLEWARE SETUP (Order is Critical) ---
-// ✅ Add the express.json() middleware to parse JSON request bodies
 app.use(express.json());
 
-// Tell Express it's behind a proxy like Render
-app.set('trust proxy', 1);
+// --- CORS Configuration for Live and Local ---
+const allowedOrigins = [
+  'http://127.0.0.1:5500', // Local frontend (using IP)
+  'http://localhost:5500',   // Local frontend (using localhost)
+  process.env.FRONTEND_URL   // Your live Render frontend URL
+];
 
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
+// Trust proxy only when running in production (on Render)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+// --- Session Configuration ---
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   store: MongoStore.create({ mongoUrl: MONGO_URI }),
   cookie: { 
-    secure: true, // Requires HTTPS, which Render provides
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    sameSite: 'none' // Allows the cookie to be sent from a different domain
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax' 
   }
 }));
-
-
-// --- CORS Configuration for Live and Local ---
-const allowedOrigins = [
-  'http://127.0.0.1:5500', // Your local frontend
-  process.env.FRONTEND_URL   // Your live Render frontend URL
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
-
-
-
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the 'public' directory, making files in 'public/images' available under '/images'
+app.use('/images', express.static(path.join(__dirname, 'public', 'images')));
+
+// --- Favicon Handling ---
+app.get('/favicon.ico', (req, res) => {
+  // Assuming you have a favicon.ico in your /public/images/ folder
+  res.sendFile(path.join(__dirname, 'public', 'images', 'favicon.ico'));
+});
 
 // --- 5. PASSPORT STRATEGY CONFIGURATION ---
 passport.use(new LocalStrategy.Strategy(
@@ -271,7 +275,9 @@ const gameData = {
 };
 const gameHelpers = {
     shuffle,
-    saveGameResult: dataService.saveGameResult
+    saveGameResult: dataService.saveGameResult,
+    rateGameResult: dataService.rateGameResult,
+    checkIfCaseRated: dataService.checkIfCaseRated
 };
 
 app.use('/api/auth', createAuthRouter(gameData));

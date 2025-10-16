@@ -88,7 +88,7 @@ export default function(gameData) {
     // --- GET /history (for fetching user's past game results) ---
     router.get('/history', isAuthenticated, async (req, res) => {
         try {
-            const results = await GameResult.find({ playerId: req.user.id }).sort({ _id: -1 });
+            const results = await GameResult.find({ playerId: req.user._id }).sort({ _id: -1 });
 
             const history = results.map(result => {
                 const patientData = allPatients.find(p => p.originalIndex == result.caseId);
@@ -101,7 +101,7 @@ export default function(gameData) {
                     finalDiagnosis: patientData.Diagnosis,
                     score: result.score,
                     actionsTaken: result.actionsTaken || [],
-                    patientAvatar: patientData.patient_avatar,
+                    patientAvatar: patientData.patient_avatar, // Send only the filename
                     solutionActions: {
                         critical: safeJsonParse(patientData.ActionsCritical, []),
                         recommended: safeJsonParse(patientData.ActionsRecommended, [])

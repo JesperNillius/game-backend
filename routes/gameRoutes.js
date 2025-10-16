@@ -10,7 +10,7 @@ export default function(gameData, helpers) {
     standardFindings, allPhysicalExams, activePatients, allPatients, availablePatients
     } = gameData;     
 
-    const { shuffle, saveGameResult} = helpers;
+    const { shuffle, saveGameResult, checkIfCaseRated } = helpers;
 
     const criticalThresholds = {
         BT_systolic: { lower: 70 }, // Fails if systolic BP is below 70
@@ -831,12 +831,18 @@ function updatePatientStates() {
         let finalScore = Math.round(Math.max(0, Math.min(100, (playerScore / maxScore) * 100)));
 
         if (req.isAuthenticated()) {
+            // Check if the user has rated this case before
+            const hasBeenRatedBefore = await checkIfCaseRated(req.user.id, caseId);
+
+            // Attach this info to the response
+            res.locals.hasBeenRatedBefore = hasBeenRatedBefore;
+
             console.log('User is logged in. Saving game result...');
             const resultData = {
                 caseId,
                 playerId: req.user.id, // req.user is guaranteed to exist here
-                score: finalScore,
-                actionsTaken
+                score: finalScore, // The score to save
+                actionsTaken: actionsTaken // The array of action IDs to save
             };
             await saveGameResult(resultData);
         } else {
@@ -854,8 +860,10 @@ function updatePatientStates() {
             utredningHTML,
             åtgärderHTML,
             correctDiagnosis: patientSolution.Diagnosis,
-            isDiagnosisCorrect: isDiagnosisCorrect,
-            fallbeskrivning: patientSolution.Fallbeskrivning
+            patientAvatar: `${req.protocol}://${req.get('host')}/images/${patientSolution.patient_avatar}`,
+            isDiagnosisCorrect,
+            fallbeskrivning: patientSolution.Fallbeskrivning,
+            hasBeenRatedBefore: res.locals.hasBeenRatedBefore || false
         });
 
         
@@ -864,6 +872,28 @@ function updatePatientStates() {
         console.error("Error during case evaluation:", err);
         res.status(500).json({ error: 'Server error during evaluation.' });
     }
+    });
+
+    router.post('/rate-case', async (req, res) => {
+        if (!req.isAuthenticated()) {
+            return res.status(401).json({ message: 'User not authenticated.' });
+        }
+
+        const { caseId, rating, feedback } = req.body;
+        const playerId = req.user.id;
+
+        if (!caseId || !rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ message: 'Invalid case ID or rating provided.' });
+        }
+
+        try {
+            // Find the most recent result for this player and case, and update it
+            await helpers.rateGameResult(playerId, caseId, rating, feedback);
+            res.json({ message: 'Rating saved successfully.' });
+        } catch (error) {
+            console.error("Error saving case rating:", error);
+            res.status(500).json({ message: 'Server error while saving rating.' });
+        }
     });
 
     router.post('/reset', (req, res) => {
@@ -883,7 +913,9 @@ function updatePatientStates() {
     if (!gameData.availablePatients || gameData.availablePatients.length === 0) {
         return res.status(404).json({ message: "No more patients available" });
     }
-    const patientToSend = gameData.availablePatients.pop();
+    // Create a deep copy of the patient object to avoid modifying the original data in 'allPatients'
+    const originalPatientData = gameData.availablePatients.pop();
+    const patientToSend = JSON.parse(JSON.stringify(originalPatientData));
 
     allLabTests.forEach(test => {
         const patientValue = patientToSend[test.id];

@@ -20,6 +20,15 @@ const gameResultSchema = new mongoose.Schema({
   },
   timeTaken: { // We're keeping your timeTaken field
     type: Number 
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 5
+  },
+  feedback: {
+    type: String,
+    trim: true
   }
 }, { 
   timestamps: true // This automatically adds createdAt and updatedAt
