@@ -81,8 +81,12 @@ export default function(gameData) {
     });
 
     // --- GET /status (for debugging) ---
-    router.get('/status', isAuthenticated, (req, res) => {
-    res.json({ user: req.user });
+    router.get('/status', (req, res) => {
+        if (req.isAuthenticated()) {
+            res.json({ user: req.user });
+        } else {
+            res.status(401).json({ user: null });
+        }
     });
 
     // --- GET /history (for fetching user's past game results) ---
