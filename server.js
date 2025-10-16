@@ -37,19 +37,22 @@ mongoose.connect(MONGO_URI)
 
 
 // --- 4. MIDDLEWARE SETUP (Order is Critical) ---
-app.use(express.json());
-
 // --- CORS Configuration for Live and Local ---
 const allowedOrigins = [
   'http://127.0.0.1:5500', // Local frontend (using IP)
   'http://localhost:5500',   // Local frontend (using localhost)
   'https://aqten-game-frontend.onrender.com', // Live frontend URL
-  process.env.FRONTEND_URL   // Your live Render frontend URL from environment variables
+  process.env.FRONTEND_URL   // Your live Render frontend URL from environment variables (good to keep for flexibility)
 ];
 
+// 1. JSON Body Parser - MUST come before CORS
+app.use(express.json());
+
+// 2. CORS Middleware
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
