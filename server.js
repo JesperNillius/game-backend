@@ -61,6 +61,9 @@ app.use(cors({
   credentials: true
 }));
 
+// --- NEW: Handle CORS Preflight Requests ---
+app.options('*', cors()); // This will intercept all OPTIONS requests and respond with the correct CORS headers.
+
 // Trust proxy only when running in production (on Render)
 if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
